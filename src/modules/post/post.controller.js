@@ -9,20 +9,20 @@ import postServices from './post.services.js'
 import { authenticate } from '../../common/middleware/authenticate.js'
 const postRouter = Router()
 postRouter.post(
-  '/create-post',
+  '/posts',
   validationMiddleWare(createPostSchema),
   authenticate,
   postServices.createPost,
 )
-postRouter.get('/get-posts', authenticate, postServices.getPosts)
-postRouter.patch(
-  '/update-post/:postId',
+postRouter.get('/posts', authenticate, postServices.getPosts)
+postRouter.put(
+  '/post/:postId',
   validationMiddleWare(updatePostSchema),
   authenticate,
   postServices.updatePost,
 )
 postRouter.delete(
-  '/delete-post/:postId',
+  '/post/:postId',
   validationMiddleWare(deletePostSchema),
   authenticate,
   postServices.deletePost,

@@ -4,7 +4,6 @@ import {
   ErrorUnAuthorizedRequest,
   SuccessResponse,
 } from '../../common/utils/globalresponse.js'
-import userRepo from '../../DataBase/repo/user.repo.js'
 import { GlobalCompare, Globalhash } from '../../common/security/hash.js'
 import {
   SECRET_ADMIN_REFRESH_TOKEN,
@@ -47,7 +46,6 @@ class auth {
     ) {
       return ErrorUnAuthorizedRequest('wrong password')
     }
-    console.log(user)
     SuccessResponse({
       res,
       data: servicesHelpers.generateTokens(user),

@@ -1,16 +1,17 @@
+import { Types } from 'mongoose'
 import {
   SECRET_ADMIN_ACCESS_TOKEN,
   SECRET_USER_ACCESS_TOKEN,
   TOKEN_ADMIN_PREFIX,
   TOKEN_USER_PREFIX,
 } from '../../config/config.services.js'
-import { TokenVerify } from '../security/jsonWebTokens.js'
+import userModel from '../../DataBase/models/user.model.js'
+import { TokenDecode, TokenVerify } from '../security/jsonWebTokens.js'
 import {
   ErrorConflict,
   Errorforbidden,
   ErrorUnAuthorizedRequest,
 } from './globalresponse.js'
-import userRepo from '../../DataBase/repo/user.repo.js'
 async function authenticateUtilts(authorization) {
   let [prefix, token] = authorization.split(' ')
   if (!prefix) {
@@ -24,26 +25,15 @@ async function authenticateUtilts(authorization) {
     }
     return Errorforbidden('invalid token*2')
   })()
-  const verify = TokenVerify({
+  const verify = TokenDecode({
     token: token,
     secret,
   })
-  const user = await new userRepo().findById({
+  // console.log(verify.userId)
+  const user = await userModel.findOne({
     id: verify.userId,
   })
   if (!user) ErrorConflict('user does not exists')
-  if (user.credentials && user.credentials.getTime() < verify.iat * 1000) {
-    console.log({ 1: user.credentials, 2: user.credentials.getTime() })
-    ErrorUnAuthorizedRequest('token revoked please login again')
-  }
-  const CachedRevokeToken = await new redisService().getKey({
-    key: new redisService().cacheKey({
-      filter: token,
-      subject: cacheKeyEnum.revokeToken,
-    }),
-  })
-  if (CachedRevokeToken)
-    ErrorUnAuthorizedRequest('token revoked please login again')
   return { user, token, decoded: verify }
 }
 export default authenticateUtilts
