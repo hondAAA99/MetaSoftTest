@@ -2,10 +2,9 @@ import {
   generateAccessToken,
   generateRefreshToken,
 } from '../../common/security/jsonWebTokens.js'
-import userRepo from '../../DataBase/repo/user.repo.js'
 import { ErrorConflict } from '../../common/utils/globalresponse.js'
+import userModel from '../../DataBase/models/user.model.js'
 class servicesHelpers {
-  _userModel = new userRepo()
   generateTokens(user) {
     const accessToken = generateAccessToken({
       userId: user.id,
@@ -18,18 +17,12 @@ class servicesHelpers {
     return { accessToken, refreshToken }
   }
 
-  checkUserExistsAndConfirmed = async (email, confirmed) => {
-    const emailExists = await this._userModel.findOne({
-      filter:
-        confirmed == true
-          ? { 'email.data': email, confirmed: true }
-          : { 'email.data': email },
+  checkUserExistsAndConfirmed = async email => {
+    const emailExists = await userModel.findOne({
+      filter: {
+        email,
+      },
     })
-    if (confirmed == null) {
-      if (emailExists) return ErrorConflict('email already exists')
-    } else if (confirmed == false || confirmed == true) {
-      if (!emailExists) return ErrorConflict('email is not exists exists')
-    }
     return emailExists
   }
 }

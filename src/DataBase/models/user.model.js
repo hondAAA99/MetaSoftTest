@@ -1,18 +1,11 @@
 import mongoose, { Schema, model } from 'mongoose'
 
-const emailSchema = new Schema({
-  data: { type: String },
-  availability: {
-    type: String,
-  },
-})
-
 export const userSchema = new Schema(
   {
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     email: {
-      type: emailSchema,
+      type: String,
       required: true,
       unique: true,
     },

@@ -19,3 +19,6 @@ export function generateRefreshToken({ userId, role, }) {
 export const TokenVerify = ({ token, secret, }) => {
     return jsonwebtoken.verify(token, secret);
 };
+export const TokenDecode = ({ token, secret, }) => {
+    return jsonwebtoken.decode(token, secret);
+};

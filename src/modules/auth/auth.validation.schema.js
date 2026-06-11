@@ -24,6 +24,5 @@ export const signInSchema = {
     body: zod.object({
         email: zod.email(),
         password: zod.string(),
-        fcm: zod.string(),
     }),
 };

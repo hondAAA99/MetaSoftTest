@@ -13,40 +13,32 @@ import {
 } from '../../config/config.services.js'
 import {
   generateAccessToken,
+  TokenDecode,
   TokenVerify,
 } from '../../common/security/jsonWebTokens.js'
 import servicesHelpers from './auth.services.helpers.js'
+import userModel from '../../DataBase/models/user.model.js'
 class auth {
-  _userModel = new userRepo()
   constructor() {}
   signUp = async (req, res, next) => {
-    const { userName, email, passwordSchema, phone, gender, BirthDate } =
-      req.body
-    const user = await servicesHelpers.checkUserExistsAndConfirmed(email, null)
-    await this._userModel
+    const { userName, email, passwordSchema } = req.body
+    const user = await servicesHelpers.checkUserExistsAndConfirmed(email)
+    await userModel
       .create({
         userName,
-        provider: providerEnum.system,
-        email: { data: email },
+        email,
         password: Globalhash({ plainText: passwordSchema.password }),
-        age: BirthDate ? { data: BirthDate } : undefined,
-        phone: phone
-          ? { data: Globalencrypt({ plainText: phone }) }
-          : undefined,
-        gender: gender ? { data: gender } : undefined,
       })
       .catch(err => {
         ErrorInternalServerError(
           `error in creating user or failed to send email *${err}`,
         )
       })
-    const emailData = generateOtp()
-    servicesHelpers.fireMailEvent(email, mailEnum.confirmSingUp, emailData)
     SuccessResponse({ res, data: 'please confirm your email' })
   }
   logIn = async (req, res, next) => {
-    const { email, password, fcm } = req.body
-    const user = await servicesHelpers.checkUserExistsAndConfirmed(email, true)
+    const { email, password } = req.body
+    const user = await servicesHelpers.checkUserExistsAndConfirmed(email)
     if (
       !GlobalCompare({
         plainText: password,
@@ -55,49 +47,22 @@ class auth {
     ) {
       return ErrorUnAuthorizedRequest('wrong password')
     }
-    let recordedFcms = await this._redisServices.getSet({
-      filter: email,
-      subject: cacheKeyEnum.fcm,
-    })
-    if (recordedFcms) {
-      await this._redisServices.addSet(
-        {
-          filter: email,
-          subject: cacheKeyEnum.fcm,
-        },
-        fcm,
-      )
-    } else if (!recordedFcms.includes(fcm)) {
-      recordedFcms.push(fcm)
-      await this._redisServices.addSet(
-        {
-          filter: email,
-          subject: cacheKeyEnum.fcm,
-        },
-        recordedFcms,
-      )
-    }
-    if (user?.twoStepVerification == true) {
-      const emailData = generateOtp()
-      servicesHelpers.fireMailEvent(email, mailEnum.confirmLoginIn, emailData)
-      SuccessResponse({
-        res,
-        data: 'please confirm your login',
-      })
-    }
+    console.log(user)
     SuccessResponse({
       res,
       data: servicesHelpers.generateTokens(user),
     })
   }
+
   generateAccessToken = async (req, res, next) => {
     const { authorization } = req.headers
-    const [prefix, token] = authorization.split(' ')
+    const [prefix, token] = authorization.split(' ');
     let secret =
       prefix == TOKEN_ADMIN_PREFIX
         ? SECRET_ADMIN_REFRESH_TOKEN
         : SECRET_USER_REFRESH_TOKEN
-    const verifyToken = TokenVerify({
+    
+    const verifyToken = TokenDecode({
       token: token,
       secret,
     })
