@@ -17,6 +17,9 @@ const bootstrap = async () => {
   app.use(express.json())
   app.use(helmet(), cors(), limiter, logger)
   await checkDataBaseConnection()
+  app.get('/', (req, res) => {
+    res.status(200).send('hello to my server')
+  })
   app.use('/auth', authRouter)
   app.use('/posts', postRouter)
   app.all('{/*demo}', (req, res, next) => {
